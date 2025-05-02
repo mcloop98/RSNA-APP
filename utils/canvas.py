@@ -6,12 +6,13 @@ import base64
 import io
 import datetime
 import gspread
-import numpy as np
 from google.oauth2.service_account import Credentials
+
 
 def decode_base64_image(base64_string):
     img_bytes = base64.b64decode(base64_string.split(",")[1])
     return Image.open(io.BytesIO(img_bytes)).convert("RGB")
+
 
 def submit_to_google_sheets(data, correct):
     scope = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
@@ -36,6 +37,7 @@ def submit_to_google_sheets(data, correct):
     ])
     return True
 
+
 def display_canvas_section():
     data = st.session_state.get("canvas_data", {})
     if not data:
@@ -48,7 +50,6 @@ def display_canvas_section():
 
     try:
         bg_img = decode_base64_image(data["image_base64"])
-        bg_img = np.array(bg_img)  # Convert PIL image to NumPy array
     except Exception as e:
         st.error(f"Failed to load background image: {e}")
         return
