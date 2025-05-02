@@ -6,20 +6,7 @@ import base64
 import io
 import datetime
 import gspread
-import numpy as np
 from google.oauth2.service_account import Credentials
-
-
-def decode_base64_image(base64_string):
-    try:
-        if base64_string.startswith("data:image"):
-            base64_string = base64_string.split(",", 1)[1]
-        img_bytes = base64.b64decode(base64_string)
-        image = Image.open(io.BytesIO(img_bytes))  # No .convert("RGB")
-        return np.array(image)  # Return NumPy array directly
-    except Exception as e:
-        st.warning(f"Could not decode image: {e}")
-        return None
 
 
 def submit_to_google_sheets(data, correct):
@@ -56,7 +43,11 @@ def display_canvas_section():
     xmin, xmax, ymin, ymax = data["x_min"], data["x_max"], data["y_min"], data["y_max"]
     case_name = data.get("case_name", "Case 1")
 
-    background_image = decode_base64_image(data.get("image_base64", ""))
+    try:
+        background_image = Image.open("example.png")
+    except Exception as e:
+        st.error(f"Failed to load image: {e}")
+        background_image = None
 
     st.markdown("<h3 style='color:white;'>Drag the green point to where you see the dissection flap:</h3>", unsafe_allow_html=True)
 
