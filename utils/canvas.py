@@ -4,7 +4,7 @@ from PIL import Image, ImageDraw
 import datetime
 import gspread
 from google.oauth2.service_account import Credentials
-from streamlit_image_coordinates import streamlit_image_coordinates
+import numpy as np
 
 
 def submit_to_google_sheets(data, correct):
@@ -43,26 +43,25 @@ def display_canvas_section():
 
     try:
         image = Image.open("example.png")
+        width, height = image.size
     except Exception as e:
         st.error(f"Failed to load image: {e}")
         return
 
     st.markdown("<h3 style='color:white;'>Click where you see the dissection flap:</h3>", unsafe_allow_html=True)
 
-    coords = streamlit_image_coordinates("example.png", key="clickable-image")
+    clicked_coords = st.image(image, use_column_width=True, output_format="PNG")
+    coords = st.session_state.get("clicked_coords")
 
-    if coords and "x" in coords and "y" in coords:
-        x, y = int(coords["x"] * image.width), int(coords["y"] * image.height)
-        st.session_state["last_click"] = {"x": x, "y": y}
+    if coords:
+        x, y = coords
+        st.markdown(f"You clicked at: **X = {x}**, **Y = {y}**")
 
-        # Draw a red dot on a copy of the image
         image_with_dot = image.copy()
         draw = ImageDraw.Draw(image_with_dot)
-        r = 5  # radius of the dot
+        r = 5
         draw.ellipse((x - r, y - r, x + r, y + r), fill="red")
-
         st.image(image_with_dot, caption="You clicked here", use_column_width=True)
-        st.markdown(f"You clicked at: **X = {x}**, **Y = {y}**")
 
         if not st.session_state.get("answer_submitted"):
             if st.button("Submit Answer"):
@@ -85,3 +84,6 @@ def display_canvas_section():
                         {message} Recorded.</div>""", unsafe_allow_html=True)
         else:
             st.info("✅ Answer already submitted. Reload the page to try again.")
+
+    else:
+        st.warning("Please click on the image to mark the location.")
