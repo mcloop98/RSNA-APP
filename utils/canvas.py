@@ -1,12 +1,10 @@
 # utils/canvas.py
 import streamlit as st
-from streamlit_drawable_canvas import st_canvas
-from PIL import Image
-import base64
-import io
+from PIL import Image, ImageDraw
 import datetime
 import gspread
 from google.oauth2.service_account import Credentials
+from streamlit_image_coordinates import streamlit_image_coordinates
 
 
 def submit_to_google_sheets(data, correct):
@@ -44,75 +42,46 @@ def display_canvas_section():
     case_name = data.get("case_name", "Case 1")
 
     try:
-        background_image = Image.open("example.png")
+        image = Image.open("example.png")
     except Exception as e:
         st.error(f"Failed to load image: {e}")
-        background_image = None
+        return
 
-    st.markdown("<h3 style='color:white;'>Drag the green point to where you see the dissection flap:</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 style='color:white;'>Click where you see the dissection flap:</h3>", unsafe_allow_html=True)
 
-    initial_circle = {
-        "type": "circle",
-        "left": cw // 2,
-        "top": ch // 2,
-        "radius": 10,
-        "fill": "rgba(0, 255, 0, 0.6)",
-        "stroke": "green",
-        "strokeWidth": 0,
-        "originX": "center",
-        "originY": "center",
-        "hasControls": False,
-        "hasBorders": False,
-        "selectable": True
-    }
+    coords = streamlit_image_coordinates("example.png", key="clickable-image")
 
-    st.markdown("<div style='position: relative; display: inline-block;'>", unsafe_allow_html=True)
-    canvas_result = st_canvas(
-        fill_color="rgba(0, 255, 0, 0.3)",
-        stroke_width=2,
-        background_image=background_image,
-        update_streamlit=True,
-        height=ch,
-        width=cw,
-        drawing_mode="transform",
-        key="canvas",
-        initial_drawing={"objects": [initial_circle]}
-    )
+    if coords and "x" in coords and "y" in coords:
+        x, y = int(coords["x"] * image.width), int(coords["y"] * image.height)
+        st.session_state["last_click"] = {"x": x, "y": y}
 
-    if canvas_result.json_data and canvas_result.json_data.get("objects"):
-        obj = canvas_result.json_data["objects"][0]
-        x, y = obj.get("left"), obj.get("top")
-        if x is not None and y is not None:
-            st.session_state["last_click"] = {"x": x, "y": y}
+        # Draw a red dot on a copy of the image
+        image_with_dot = image.copy()
+        draw = ImageDraw.Draw(image_with_dot)
+        r = 5  # radius of the dot
+        draw.ellipse((x - r, y - r, x + r, y + r), fill="red")
 
-            if not st.session_state.get("answer_submitted"):
-                submitted = st.button("Submit Answer", key="submit_button")
-                if submitted:
-                    correct = xmin <= x <= xmax and ymin <= y <= ymax
-                    timestamp = datetime.datetime.now().isoformat()
+        st.image(image_with_dot, caption="You clicked here", use_column_width=True)
+        st.markdown(f"You clicked at: **X = {x}**, **Y = {y}**")
 
-                    result = {
-                        "x": x,
-                        "y": y,
-                        "timestamp": timestamp,
-                        "case": case_name
-                    }
+        if not st.session_state.get("answer_submitted"):
+            if st.button("Submit Answer"):
+                correct = xmin <= x <= xmax and ymin <= y <= ymax
+                timestamp = datetime.datetime.now().isoformat()
 
-                    if submit_to_google_sheets(result, correct):
-                        st.session_state["answer_submitted"] = True
-                        color = "rgba(0,255,0,0.8)" if correct else "#ff4d4d"
-                        message = "✅ Correct!" if correct else "❌ Incorrect."
-                        st.markdown(f"""
-                            <div style='position: absolute; bottom: 10px; left: 50%; transform: translate(-50%, 0); 
-                            background-color: {color}; color: white; padding: 10px 20px; border-radius: 8px; font-weight: bold;'>
-                            {message} Recorded.</div>""", unsafe_allow_html=True)
-            else:
-                st.markdown("""
-                    <div style='position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%); 
-                    background-color: rgba(0,0,0,0.7); color: white; padding: 10px 20px; border-radius: 8px; font-weight: bold;'>
-                    ✅ Answer already submitted. Reload the page to try again.</div>
-                </div>""", unsafe_allow_html=True)
-                return
-    else:
-        st.markdown("</div>", unsafe_allow_html=True)
-        st.warning("Drag the green point to your answer location.")
+                result_data = {
+                    "x": x,
+                    "y": y,
+                    "timestamp": timestamp,
+                    "case": case_name
+                }
+
+                if submit_to_google_sheets(result_data, correct):
+                    st.session_state["answer_submitted"] = True
+                    color = "rgba(0,255,0,0.8)" if correct else "#ff4d4d"
+                    message = "✅ Correct!" if correct else "❌ Incorrect."
+                    st.markdown(f"""
+                        <div style='background-color: {color}; color: white; padding: 10px 20px; border-radius: 8px; font-weight: bold;'>
+                        {message} Recorded.</div>""", unsafe_allow_html=True)
+        else:
+            st.info("✅ Answer already submitted. Reload the page to try again.")
