@@ -5,6 +5,7 @@ import datetime
 import gspread
 from google.oauth2.service_account import Credentials
 import numpy as np
+import streamlit_drawable_canvas as sdc
 
 
 def submit_to_google_sheets(data, correct):
@@ -48,42 +49,62 @@ def display_canvas_section():
         st.error(f"Failed to load image: {e}")
         return
 
-    st.markdown("<h3 style='color:white;'>Click where you see the dissection flap:</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 style='color:white;'>Drag the dot to where you see the dissection flap:</h3>", unsafe_allow_html=True)
 
-    clicked_coords = st.image(image, use_column_width=True, output_format="PNG")
-    coords = st.session_state.get("clicked_coords")
+    # Define initial draggable dot
+    initial_circle = {
+        "type": "circle",
+        "left": cw // 2,
+        "top": ch // 2,
+        "radius": 10,
+        "fill": "rgba(0, 255, 0, 0.6)",
+        "stroke": "green",
+        "strokeWidth": 0,
+        "originX": "center",
+        "originY": "center",
+        "hasControls": False,
+        "hasBorders": False,
+        "selectable": True
+    }
 
-    if coords:
-        x, y = coords
-        st.markdown(f"You clicked at: **X = {x}**, **Y = {y}**")
+    canvas_result = sdc.st_canvas(
+        fill_color="rgba(0, 255, 0, 0.3)",
+        stroke_width=2,
+        background_image=image,
+        update_streamlit=True,
+        height=ch,
+        width=cw,
+        drawing_mode="transform",
+        key="canvas",
+        initial_drawing={"objects": [initial_circle]}
+    )
 
-        image_with_dot = image.copy()
-        draw = ImageDraw.Draw(image_with_dot)
-        r = 5
-        draw.ellipse((x - r, y - r, x + r, y + r), fill="red")
-        st.image(image_with_dot, caption="You clicked here", use_column_width=True)
+    if canvas_result.json_data and canvas_result.json_data.get("objects"):
+        obj = canvas_result.json_data["objects"][0]
+        x, y = obj.get("left"), obj.get("top")
+        if x is not None and y is not None:
+            st.session_state["last_click"] = {"x": x, "y": y}
 
-        if not st.session_state.get("answer_submitted"):
-            if st.button("Submit Answer"):
-                correct = xmin <= x <= xmax and ymin <= y <= ymax
-                timestamp = datetime.datetime.now().isoformat()
+            if not st.session_state.get("answer_submitted"):
+                if st.button("Submit Answer"):
+                    correct = xmin <= x <= xmax and ymin <= y <= ymax
+                    timestamp = datetime.datetime.now().isoformat()
 
-                result_data = {
-                    "x": x,
-                    "y": y,
-                    "timestamp": timestamp,
-                    "case": case_name
-                }
+                    result_data = {
+                        "x": x,
+                        "y": y,
+                        "timestamp": timestamp,
+                        "case": case_name
+                    }
 
-                if submit_to_google_sheets(result_data, correct):
-                    st.session_state["answer_submitted"] = True
-                    color = "rgba(0,255,0,0.8)" if correct else "#ff4d4d"
-                    message = "✅ Correct!" if correct else "❌ Incorrect."
-                    st.markdown(f"""
-                        <div style='background-color: {color}; color: white; padding: 10px 20px; border-radius: 8px; font-weight: bold;'>
-                        {message} Recorded.</div>""", unsafe_allow_html=True)
-        else:
-            st.info("✅ Answer already submitted. Reload the page to try again.")
-
+                    if submit_to_google_sheets(result_data, correct):
+                        st.session_state["answer_submitted"] = True
+                        color = "rgba(0,255,0,0.8)" if correct else "#ff4d4d"
+                        message = "✅ Correct!" if correct else "❌ Incorrect."
+                        st.markdown(f"""
+                            <div style='background-color: {color}; color: white; padding: 10px 20px; border-radius: 8px; font-weight: bold;'>
+                            {message} Recorded.</div>""", unsafe_allow_html=True)
+            else:
+                st.info("✅ Answer already submitted. Reload the page to try again.")
     else:
-        st.warning("Please click on the image to mark the location.")
+        st.warning("Please drag the dot to your selected location.")
