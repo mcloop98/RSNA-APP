@@ -48,7 +48,7 @@ def display_canvas_section():
     try:
         bg_img = decode_base64_image(data["image_base64"])
     except Exception as e:
-        st.error(f"Failed to load image: {e}")
+        st.error(f"Failed to load background image: {e}")
         return
 
     st.markdown("<h3 style='color:white;'>Drag the green point to where you see the dissection flap:</h3>", unsafe_allow_html=True)
