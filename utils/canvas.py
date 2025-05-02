@@ -49,12 +49,12 @@ def display_canvas_section():
     xmin, xmax, ymin, ymax = data["x_min"], data["x_max"], data["y_min"], data["y_max"]
     case_name = data.get("case_name", "Case 1")
 
+    bg_img = None
     try:
         bg_img = decode_base64_image(data["image_base64"])
         bg_img = np.array(bg_img)
     except Exception as e:
-        st.error(f"Failed to load background image: {e}")
-        return
+        st.warning(f"Background image could not be loaded: {e}")
 
     st.markdown("<h3 style='color:white;'>Drag the green point to where you see the dissection flap:</h3>", unsafe_allow_html=True)
 
@@ -74,17 +74,20 @@ def display_canvas_section():
     }
 
     st.markdown("<div style='position: relative; display: inline-block;'>", unsafe_allow_html=True)
-    canvas_result = st_canvas(
-        fill_color="rgba(0, 255, 0, 0.3)",
-        stroke_width=2,
-        background_image=bg_img,
-        update_streamlit=True,
-        height=ch,
-        width=cw,
-        drawing_mode="transform",
-        key="canvas",
-        initial_drawing={"objects": [initial_circle]}
-    )
+    canvas_kwargs = {
+        "fill_color": "rgba(0, 255, 0, 0.3)",
+        "stroke_width": 2,
+        "update_streamlit": True,
+        "height": ch,
+        "width": cw,
+        "drawing_mode": "transform",
+        "key": "canvas",
+        "initial_drawing": {"objects": [initial_circle]}
+    }
+    if bg_img is not None:
+        canvas_kwargs["background_image"] = bg_img
+
+    canvas_result = st_canvas(**canvas_kwargs)
 
     if canvas_result.json_data and canvas_result.json_data.get("objects"):
         obj = canvas_result.json_data["objects"][0]
