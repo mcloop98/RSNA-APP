@@ -6,13 +6,11 @@ import base64
 import io
 import datetime
 import gspread
-import numpy as np
 from google.oauth2.service_account import Credentials
 
 
-def decode_base64_image(base64_string):
-    img_bytes = base64.b64decode(base64_string.split(",")[1])
-    return Image.open(io.BytesIO(img_bytes)).convert("RGB")
+def decode_base64_to_data_url(base64_string):
+    return base64_string  # Already in "data:image/...;base64,..." format from the frontend
 
 
 def submit_to_google_sheets(data, correct):
@@ -49,12 +47,11 @@ def display_canvas_section():
     xmin, xmax, ymin, ymax = data["x_min"], data["x_max"], data["y_min"], data["y_max"]
     case_name = data.get("case_name", "Case 1")
 
-    bg_img = None
+    background_image_url = None
     try:
-        bg_img = decode_base64_image(data["image_base64"])
-        bg_img = np.array(bg_img)
+        background_image_url = decode_base64_to_data_url(data["image_base64"])
     except Exception as e:
-        st.warning(f"Background image could not be loaded: {e}")
+        st.warning(f"Background image could not be decoded: {e}")
 
     st.markdown("<h3 style='color:white;'>Drag the green point to where you see the dissection flap:</h3>", unsafe_allow_html=True)
 
@@ -74,20 +71,17 @@ def display_canvas_section():
     }
 
     st.markdown("<div style='position: relative; display: inline-block;'>", unsafe_allow_html=True)
-    canvas_kwargs = {
-        "fill_color": "rgba(0, 255, 0, 0.3)",
-        "stroke_width": 2,
-        "update_streamlit": True,
-        "height": ch,
-        "width": cw,
-        "drawing_mode": "transform",
-        "key": "canvas",
-        "initial_drawing": {"objects": [initial_circle]}
-    }
-    if bg_img is not None:
-        canvas_kwargs["background_image"] = bg_img
-
-    canvas_result = st_canvas(**canvas_kwargs)
+    canvas_result = st_canvas(
+        fill_color="rgba(0, 255, 0, 0.3)",
+        stroke_width=2,
+        background_image=background_image_url,
+        update_streamlit=True,
+        height=ch,
+        width=cw,
+        drawing_mode="transform",
+        key="canvas",
+        initial_drawing={"objects": [initial_circle]}
+    )
 
     if canvas_result.json_data and canvas_result.json_data.get("objects"):
         obj = canvas_result.json_data["objects"][0]
