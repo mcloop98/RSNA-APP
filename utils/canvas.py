@@ -6,6 +6,7 @@ import base64
 import io
 import datetime
 import gspread
+import numpy as np
 from google.oauth2.service_account import Credentials
 
 
@@ -14,7 +15,8 @@ def decode_base64_image(base64_string):
         if base64_string.startswith("data:image"):
             base64_string = base64_string.split(",", 1)[1]
         img_bytes = base64.b64decode(base64_string)
-        return Image.open(io.BytesIO(img_bytes)).convert("RGB")
+        image = Image.open(io.BytesIO(img_bytes))  # No .convert("RGB")
+        return np.array(image)  # Return NumPy array directly
     except Exception as e:
         st.warning(f"Could not decode image: {e}")
         return None
