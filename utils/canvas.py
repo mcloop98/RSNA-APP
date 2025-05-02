@@ -9,8 +9,15 @@ import gspread
 from google.oauth2.service_account import Credentials
 
 
-def decode_base64_to_data_url(base64_string):
-    return base64_string  # Already in "data:image/...;base64,..." format from the frontend
+def decode_base64_image(base64_string):
+    try:
+        if base64_string.startswith("data:image"):
+            base64_string = base64_string.split(",", 1)[1]
+        img_bytes = base64.b64decode(base64_string)
+        return Image.open(io.BytesIO(img_bytes)).convert("RGB")
+    except Exception as e:
+        st.warning(f"Could not decode image: {e}")
+        return None
 
 
 def submit_to_google_sheets(data, correct):
@@ -47,11 +54,7 @@ def display_canvas_section():
     xmin, xmax, ymin, ymax = data["x_min"], data["x_max"], data["y_min"], data["y_max"]
     case_name = data.get("case_name", "Case 1")
 
-    background_image_url = None
-    try:
-        background_image_url = decode_base64_to_data_url(data["image_base64"])
-    except Exception as e:
-        st.warning(f"Background image could not be decoded: {e}")
+    background_image = decode_base64_image(data.get("image_base64", ""))
 
     st.markdown("<h3 style='color:white;'>Drag the green point to where you see the dissection flap:</h3>", unsafe_allow_html=True)
 
@@ -74,7 +77,7 @@ def display_canvas_section():
     canvas_result = st_canvas(
         fill_color="rgba(0, 255, 0, 0.3)",
         stroke_width=2,
-        background_image=background_image_url,
+        background_image=background_image,
         update_streamlit=True,
         height=ch,
         width=cw,
