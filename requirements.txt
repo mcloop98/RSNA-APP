@@ -1,0 +1,10 @@
+streamlit
+pandas
+numpy
+Pillow
+matplotlib
+seaborn
+gspread
+google-auth
+streamlit-drawable-canvas
+scipy
