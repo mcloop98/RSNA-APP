@@ -6,6 +6,7 @@ import base64
 import io
 import datetime
 import gspread
+import numpy as np
 from google.oauth2.service_account import Credentials
 
 def decode_base64_image(base64_string):
@@ -47,6 +48,7 @@ def display_canvas_section():
 
     try:
         bg_img = decode_base64_image(data["image_base64"])
+        bg_img = np.array(bg_img)  # Convert PIL image to NumPy array
     except Exception as e:
         st.error(f"Failed to load background image: {e}")
         return
