@@ -20,7 +20,6 @@ def submit_to_google_sheets(data, correct):
     print("Authorized. Trying to open the sheet...")
     print("Sheet opened successfully:", sheet.title)
 
-
     try:
         worksheet = sheet.worksheet("Small Arteries")
     except gspread.WorksheetNotFound:
@@ -45,7 +44,12 @@ def display_canvas_section():
     cw, ch = data["canvas_width"], data["canvas_height"]
     xmin, xmax, ymin, ymax = data["x_min"], data["x_max"], data["y_min"], data["y_max"]
     case_name = data.get("case_name", "Case 1")
-    bg_img = decode_base64_image(data["image_base64"])
+
+    try:
+        bg_img = decode_base64_image(data["image_base64"])
+    except Exception as e:
+        st.error(f"Failed to load image: {e}")
+        return
 
     st.markdown("<h3 style='color:white;'>Drag the green point to where you see the dissection flap:</h3>", unsafe_allow_html=True)
 
