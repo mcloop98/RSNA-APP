@@ -66,8 +66,11 @@ def display_canvas_section():
     if isinstance(base64_data, str) and "," in base64_data:
         try:
             bg_img = decode_base64_image(base64_data)
+                        st.image(bg_img, caption="Image preview", use_column_width=True)
+            bg_img = bg_img.convert("RGB")  # Ensure it's valid for canvas
             if not isinstance(bg_img, Image.Image):
-                raise TypeError("Decoded image is not a PIL.Image object.")
+                st.warning("Decoded image is not a valid PIL image.")
+                return
         except Exception as e:
             st.warning(f"Background image could not be loaded: {e}")
     else:
