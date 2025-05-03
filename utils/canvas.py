@@ -3,6 +3,7 @@ from PIL import Image, ImageDraw, ImageFont
 from datetime import datetime
 import gspread
 from google.oauth2.service_account import Credentials
+import time
 
 
 def display_canvas_section():
@@ -61,5 +62,6 @@ def display_canvas_section():
             # Step 1: Save trigger to session state
             st.session_state["go_to_analysis"] = True
 
-            # Step 2: Force rerun to show analysis section
+            # Step 2: Pause to show feedback, then rerun
+            time.sleep(1.5)
             st.rerun()
