@@ -1,4 +1,4 @@
-# utils/canvas.py
+ # utils/canvas.py
 import streamlit as st
 from streamlit_drawable_canvas import st_canvas
 from PIL import Image
@@ -8,26 +8,19 @@ import datetime
 import gspread
 from google.oauth2.service_account import Credentials
 
+
 def decode_base64_image(base64_string):
-    # Ensure base64_string is a single string (not a list)
-    if isinstance(base64_string, list):
-        if not base64_string:
-            raise ValueError("Empty base64 list received.")
-        base64_string = base64_string[0]
-    if not isinstance(base64_string, str):
-        raise TypeError("Expected base64 string, got something else.")
-
-    if "," not in base64_string:
-        raise ValueError("Invalid base64 format: missing comma separator.")
-
     img_bytes = base64.b64decode(base64_string.split(",")[1])
     return Image.open(io.BytesIO(img_bytes)).convert("RGB")
+
 
 def submit_to_google_sheets(data, correct):
     scope = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
     creds = Credentials.from_service_account_file("credentials.json", scopes=scope)
     client = gspread.authorize(creds)
     sheet = client.open_by_url("https://docs.google.com/spreadsheets/d/1kcfzQ-EHycjFY9JNDRvRgKYPXzoNsb-Ie0qyb709SAs")
+    print("Authorized. Trying to open the sheet...")
+    print("Sheet opened successfully:", sheet.title)
 
     try:
         worksheet = sheet.worksheet("Small Arteries")
@@ -44,6 +37,7 @@ def submit_to_google_sheets(data, correct):
     ])
     return True
 
+
 def display_canvas_section():
     data = st.session_state.get("canvas_data", {})
     if not data:
@@ -55,26 +49,10 @@ def display_canvas_section():
     case_name = data.get("case_name", "Case 1")
 
     bg_img = None
-    base64_data = data.get("image_base64")
-
-    if isinstance(base64_data, list):
-        if base64_data:
-            base64_data = base64_data[0]
-        else:
-            base64_data = None
-
-    if isinstance(base64_data, str) and "," in base64_data:
-        try:
-            bg_img = decode_base64_image(base64_data)
-            st.image(bg_img, caption="Image preview", use_column_width=True)
-            bg_img = bg_img.convert("RGB")  # Ensure it's valid for canvas
-            if not isinstance(bg_img, Image.Image):
-                st.warning("Decoded image is not a valid PIL image.")
-                return
-        except Exception as e:
-            st.warning(f"Background image could not be loaded: {e}")
-    else:
-        st.warning("Invalid base64 image format provided.")
+    try:
+        bg_img = decode_base64_image(data["image_base64"])
+    except Exception as e:
+        st.warning(f"Background image could not be loaded: {e}")
 
     st.markdown("<h3 style='color:white;'>Drag the green point to where you see the dissection flap:</h3>", unsafe_allow_html=True)
 
@@ -102,21 +80,16 @@ def display_canvas_section():
         "width": cw,
         "drawing_mode": "transform",
         "key": "canvas",
-        "initial_drawing": {"version": "4.4.0", "objects": [initial_circle]}  # Corrected: must be a list
+        "initial_drawing": {"objects": [initial_circle]}
     }
-    if isinstance(bg_img, Image.Image) and bg_img.size != (0, 0):
-        import numpy as np
-        canvas_kwargs["background_image"] = np.array(bg_img)
+    if bg_img is not None:
+        canvas_kwargs["background_image"] = bg_img
 
     canvas_result = st_canvas(**canvas_kwargs)
 
     if canvas_result.json_data and canvas_result.json_data.get("objects"):
-        objects = canvas_result.json_data["objects"]
-        if isinstance(objects, list) and len(objects) > 0 and isinstance(objects[0], dict):
-            x, y = objects[0].get("left"), objects[0].get("top")
-        else:
-            st.warning("No valid object found on the canvas.")
-            return
+        obj = canvas_result.json_data["objects"][0]
+        x, y = obj.get("left"), obj.get("top")
         if x is not None and y is not None:
             st.session_state["last_click"] = {"x": x, "y": y}
 
