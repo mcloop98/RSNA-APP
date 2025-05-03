@@ -104,7 +104,7 @@ def display_canvas_section():
         "key": "canvas",
         "initial_drawing": {"version": "4.4.0", "objects": [initial_circle]}  # Corrected: must be a list
     }
-    if isinstance(bg_img, Image.Image):
+    if isinstance(bg_img, Image.Image) and bg_img.size != (0, 0):
         import numpy as np
         canvas_kwargs["background_image"] = np.array(bg_img)
 
