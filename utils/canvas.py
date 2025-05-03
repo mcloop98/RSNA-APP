@@ -33,6 +33,9 @@ def display_canvas_section():
         "G": (272, 591)
     }
 
+    # Placeholder for feedback
+    feedback_placeholder = st.empty()
+
     # Render buttons horizontally
     cols = st.columns(len(button_positions))
     for idx, (letter, (x, y)) in enumerate(button_positions.items()):
@@ -42,13 +45,13 @@ def display_canvas_section():
             case = "Case 1"
             worksheet.append_row([x, y, status, timestamp, case, letter])
             if status == "Correct":
-                st.markdown(f"""
+                feedback_placeholder.markdown(f"""
                 <div style='background-color:#28a745; padding:10px; border-radius:8px; text-align:center; color:white; font-size:18px; font-weight:bold;'>
                     ✅ {status}, {case}
                 </div>
                 """, unsafe_allow_html=True)
             else:
-                st.markdown(f"""
+                feedback_placeholder.markdown(f"""
                 <div style='background-color:#dc3545; padding:10px; border-radius:8px; text-align:center; color:white; font-size:18px; font-weight:bold;'>
                     ❌ {status}, {case}
                 </div>
