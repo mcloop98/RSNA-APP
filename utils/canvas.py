@@ -61,5 +61,5 @@ def display_canvas_section():
             # Step 1: Save trigger to session state
             st.session_state["go_to_analysis"] = True
 
-            # Step 2: Trigger scroll to analysis section
-            st.markdown("<meta http-equiv='refresh' content='0; url=#analysis_section'>", unsafe_allow_html=True)
+            # Step 2: Force rerun to show analysis section
+            st.rerun()
