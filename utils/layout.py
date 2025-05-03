@@ -106,13 +106,11 @@ def render_header():
 <div class="bullet-box">
     <strong>This is a sample of the app:</strong>
     <ul>
-        <li>The app guides users through a step-by-step process.</li>
-        <li>You can click the button to view a detailed analysis of the answers.</li>
-        <li>A heat map displays the most prevalent answers and the distribution of correct and incorrect responses.</li>
-        <li>The app will be tested by residents and fellows from our institution.</li>
-        <li>We will analyze the data to identify the cases that cause the most confusion, in order to highlight these points in the educational exhibit.</li>
-        <li>The most representative cases of pediatric vascular emergencies will be showcased.</li>
-        <li>This app also will be displayed at the upcoming conference.</li>
+        <li>Step-by-step guidance through cases.</li>
+<li>Click to view detailed analysis and heat maps.</li>
+<li>Tested by residents and fellows.</li>
+<li>Key confusion points will inform educational highlights.</li>
+<li>Showcased at the upcoming conference.</li>
     </ul>
 </div>
 ''', unsafe_allow_html=True)
