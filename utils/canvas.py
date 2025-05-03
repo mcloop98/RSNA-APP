@@ -35,6 +35,7 @@ def display_canvas_section():
 
     # Placeholder for feedback
     feedback_placeholder = st.empty()
+    st.markdown("<div style='margin-bottom: 25px;'></div>", unsafe_allow_html=True)
 
     # Render buttons horizontally
     cols = st.columns(len(button_positions))
@@ -56,3 +57,9 @@ def display_canvas_section():
                     ❌ {status}, {case}
                 </div>
                 """, unsafe_allow_html=True)
+
+            # Step 1: Save trigger to session state
+            st.session_state["go_to_analysis"] = True
+
+            # Step 2: Trigger scroll to analysis section
+            st.markdown("<meta http-equiv='refresh' content='0; url=#analysis_section'>", unsafe_allow_html=True)

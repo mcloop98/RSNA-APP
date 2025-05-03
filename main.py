@@ -12,12 +12,19 @@ st.set_page_config(
     layout="centered"
 )
 
+# Step 1: Initialize view_analysis if not already set
 if 'view_analysis' not in st.session_state:
     st.session_state.view_analysis = False
 
+# Step 2: Automatically show analysis if canvas triggered it
+if st.session_state.get("go_to_analysis"):
+    st.session_state.view_analysis = True
+
 render_header()
 
+# Step 3: Display analysis or canvas section
 if st.session_state.view_analysis:
+    st.markdown("<a name='analysis_section'></a>", unsafe_allow_html=True)
     display_analysis_section()
 else:
     st.markdown('''
