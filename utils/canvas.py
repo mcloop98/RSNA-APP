@@ -33,27 +33,23 @@ def display_canvas_section():
         "G": (272, 591)
     }
 
-    # Render buttons in vertical columns with 3 per row
-    button_list = list(button_positions.items())
-    for i in range(0, len(button_list), 3):
-        cols = st.columns(3)
-        for j in range(3):
-            if i + j < len(button_list):
-                letter, (x, y) = button_list[i + j]
-                if cols[j].button(letter):
-                    status = "Correct" if letter == "C" else "Incorrect"
-                    timestamp = datetime.now().isoformat()
-                    case = "Case 1"
-                    worksheet.append_row([x, y, status, timestamp, case, letter])
-                    if status == "Correct":
-                        st.markdown(f"""
-                        <div style='background-color:#28a745; padding:10px; border-radius:8px; text-align:center; color:white; font-size:18px; font-weight:bold;'>
-                            ✅ {status}, {case}
-                        </div>
-                        """, unsafe_allow_html=True)
-                    else:
-                        st.markdown(f"""
-                        <div style='background-color:#dc3545; padding:10px; border-radius:8px; text-align:center; color:white; font-size:18px; font-weight:bold;'>
-                            ❌ {status}, {case}
-                        </div>
-                        """, unsafe_allow_html=True)
+    # Render buttons horizontally
+    cols = st.columns(len(button_positions))
+    for idx, (letter, (x, y)) in enumerate(button_positions.items()):
+        if cols[idx].button(letter):
+            status = "Correct" if letter == "C" else "Incorrect"
+            timestamp = datetime.now().isoformat()
+            case = "Case 1"
+            worksheet.append_row([x, y, status, timestamp, case, letter])
+            if status == "Correct":
+                st.markdown(f"""
+                <div style='background-color:#28a745; padding:10px; border-radius:8px; text-align:center; color:white; font-size:18px; font-weight:bold;'>
+                    ✅ {status}, {case}
+                </div>
+                """, unsafe_allow_html=True)
+            else:
+                st.markdown(f"""
+                <div style='background-color:#dc3545; padding:10px; border-radius:8px; text-align:center; color:white; font-size:18px; font-weight:bold;'>
+                    ❌ {status}, {case}
+                </div>
+                """, unsafe_allow_html=True)
