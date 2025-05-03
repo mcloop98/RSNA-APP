@@ -64,7 +64,7 @@ def display_canvas_section():
             base64_data = None
 
     if isinstance(base64_data, str) and "," in base64_data:
-                try:
+        try:
             bg_img = decode_base64_image(base64_data)
             st.image(bg_img, caption="Image preview", use_column_width=True)
             bg_img = bg_img.convert("RGB")  # Ensure it's valid for canvas
