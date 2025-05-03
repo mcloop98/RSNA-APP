@@ -4,6 +4,7 @@ from datetime import datetime
 import gspread
 from google.oauth2.service_account import Credentials
 
+
 def display_canvas_section():
     st.markdown("<h3 style='color:white;'>Example: Which letter is closest to the location of the dissection flap?</h3>", unsafe_allow_html=True)
 
@@ -41,7 +42,9 @@ def display_canvas_section():
 
     # Google Sheets setup
     scope = ["https://www.googleapis.com/auth/spreadsheets"]
-    credentials = Credentials.from_service_account_file("credentials.json", scopes=scope)
+    credentials = Credentials.from_service_account_info(
+        st.secrets["gcp_service_account"], scopes=scope
+    )
     client = gspread.authorize(credentials)
     sheet = client.open_by_url("https://docs.google.com/spreadsheets/d/1kcfzQ-EHycjFY9JNDRvRgKYPXzoNsb-Ie0qyb709SAs/edit#gid=0")
     worksheet = sheet.worksheet("Small Arteries")
