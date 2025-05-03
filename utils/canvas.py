@@ -10,8 +10,17 @@ def display_canvas_section():
 
     # Load the image
     img = Image.open("example.png")
-    img_with_buttons = img.copy()
-    draw = ImageDraw.Draw(img_with_buttons)
+
+    st.image(img, caption="Example Case Image")
+
+    # Google Sheets setup
+    scope = ["https://www.googleapis.com/auth/spreadsheets"]
+    credentials = Credentials.from_service_account_info(
+        st.secrets["gcp_service_account"], scopes=scope
+    )
+    client = gspread.authorize(credentials)
+    sheet = client.open_by_url("https://docs.google.com/spreadsheets/d/1kcfzQ-EHycjFY9JNDRvRgKYPXzoNsb-Ie0qyb709SAs/edit#gid=0")
+    worksheet = sheet.worksheet("Small Arteries")
 
     # Button definitions: label -> (x, y)
     button_positions = {
@@ -23,31 +32,6 @@ def display_canvas_section():
         "F": (1482, 133),
         "G": (272, 591)
     }
-
-    # Load font
-    try:
-        font = ImageFont.truetype("arial.ttf", 70)
-    except:
-        font = ImageFont.load_default()
-
-    # Draw each letter on the image
-    for letter, (x, y) in button_positions.items():
-        bbox = font.getbbox(letter)
-        text_width = bbox[2] - bbox[0]
-        text_height = bbox[3] - bbox[1]
-        text_position = (x - text_width // 2, y - text_height // 2 - bbox[1])
-        draw.text(text_position, letter, fill="red", font=font)
-
-    st.image(img_with_buttons, caption="Example Case Image with Buttons")
-
-    # Google Sheets setup
-    scope = ["https://www.googleapis.com/auth/spreadsheets"]
-    credentials = Credentials.from_service_account_info(
-        st.secrets["gcp_service_account"], scopes=scope
-    )
-    client = gspread.authorize(credentials)
-    sheet = client.open_by_url("https://docs.google.com/spreadsheets/d/1kcfzQ-EHycjFY9JNDRvRgKYPXzoNsb-Ie0qyb709SAs/edit#gid=0")
-    worksheet = sheet.worksheet("Small Arteries")
 
     # Render buttons horizontally
     cols = st.columns(len(button_positions))
